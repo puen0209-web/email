@@ -31,10 +31,15 @@
 
 ## ⚡ VPS 一键极速部署（推荐）
 
-在任何 Ubuntu / Debian / CentOS / Rocky Linux 服务器上，只需粘贴执行如下单行命令，即可自动配置环境、克隆代码、创建虚拟环境、注册并启动 systemd 守护进程：
+在任何 Ubuntu / Debian / CentOS / Rocky Linux 服务器上，只需粘贴执行如下单行命令（使用 `sudo` 权限），即可全自动配置环境、克隆代码、创建虚拟环境、注册并启动 systemd 守护进程：
 
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/puen0209-web/email/main/install.sh)"
+sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/puen0209-web/email/main/install.sh)"
+```
+
+或者使用管道命令：
+```bash
+curl -fsSL https://raw.githubusercontent.com/puen0209-web/email/main/install.sh | sudo bash
 ```
 
 > 💡 安装完成后，在浏览器访问 `http://<你的VPS公网IP>:8080` 即可开始使用，默认管理口令为 `admin888`。

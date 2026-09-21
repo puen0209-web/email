@@ -33,11 +33,20 @@ cat << "EOF"
 EOF
 echo -e "${CYAN}>>> 情侣每日暖心早报服务 (Couple Daily Mailer) VPS 一键安装脚本 <<<${NC}\n"
 
-# 1. 检查 root 权限
+# 1. 检查 root 权限，若为普通用户则自动通过 sudo 提权
 if [ "$EUID" -ne 0 ]; then
-    echo -e "${RED}[错误] 请使用 root 权限或 sudo 运行此脚本！${NC}"
-    echo -e "示例: sudo bash $0"
-    exit 1
+    echo -e "${YELLOW}[提示] 检测到当前为普通用户 (${USER:-$(whoami)})，正在尝试通过 sudo 自动提权运行...${NC}"
+    if command -v sudo >/dev/null 2>&1; then
+        if [ -f "$0" ] && [ "$0" != "bash" ]; then
+            exec sudo bash "$0" "$@"
+        else
+            exec sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/puen0209-web/email/main/install.sh)"
+        fi
+    else
+        echo -e "${RED}[错误] 系统中未找到 sudo 命令，请切换到 root 用户 (su root) 后再运行！${NC}"
+        echo -e "或者使用: sudo bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/puen0209-web/email/main/install.sh)\""
+        exit 1
+    fi
 fi
 
 # 2. 检查并安装系统包管理器依赖
