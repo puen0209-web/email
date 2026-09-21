@@ -20,7 +20,7 @@ APP_NAME="couple-mailer"
 INSTALL_DIR="/opt/couple-mailer"
 REPO_URL="https://github.com/puen0209-web/email.git"
 SERVICE_NAME="couple-mailer.service"
-PORT=8080
+PORT="${PORT:-}"
 
 echo -e "${PURPLE}"
 cat << "EOF"
@@ -38,14 +38,51 @@ if [ "$EUID" -ne 0 ]; then
     echo -e "${YELLOW}[提示] 检测到当前为普通用户 (${USER:-$(whoami)})，正在尝试通过 sudo 自动提权运行...${NC}"
     if command -v sudo >/dev/null 2>&1; then
         if [ -f "$0" ] && [ "$0" != "bash" ]; then
-            exec sudo bash "$0" "$@"
+            exec sudo env PORT="${PORT}" bash "$0" "$@"
         else
-            exec sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/puen0209-web/email/main/install.sh)"
+            exec sudo env PORT="${PORT}" bash -c "$(curl -fsSL https://raw.githubusercontent.com/puen0209-web/email/main/install.sh)"
         fi
     else
         echo -e "${RED}[错误] 系统中未找到 sudo 命令，请切换到 root 用户 (su root) 后再运行！${NC}"
         echo -e "或者使用: sudo bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/puen0209-web/email/main/install.sh)\""
         exit 1
+    fi
+fi
+
+# 端口检测与智能分配
+check_port_in_use() {
+    local p=$1
+    if command -v ss >/dev/null 2>&1; then
+        ss -tuln 2>/dev/null | grep -E "(:|\])${p}\b" >/dev/null && return 0
+    fi
+    if command -v netstat >/dev/null 2>&1; then
+        netstat -tuln 2>/dev/null | grep -E "(:|\])${p}\b" >/dev/null && return 0
+    fi
+    if command -v lsof >/dev/null 2>&1; then
+        lsof -iTCP:${p} -sTCP:LISTEN >/dev/null 2>&1 && return 0
+    fi
+    (timeout 1 bash -c "cat < /dev/null > /dev/tcp/127.0.0.1/${p}") >/dev/null 2>&1 && return 0
+    return 1
+}
+
+# 确定运行端口
+if [ -n "$PORT" ]; then
+    echo -e "${CYAN}已指定使用端口: ${PORT}${NC}"
+else
+    if check_port_in_use 8080; then
+        echo -e "${YELLOW}[提示] 检测到常用端口 8080 已被其他项目占用！${NC}"
+        for candidate in 8090 8088 8888 9090 8081; do
+            if ! check_port_in_use $candidate; then
+                PORT=$candidate
+                echo -e "${GREEN}✓ 已自动为您切换至未被占用的空闲端口: ${PORT}${NC}"
+                break
+            fi
+        done
+        if [ -z "$PORT" ]; then
+            PORT=8090
+        fi
+    else
+        PORT=8080
     fi
 fi
 

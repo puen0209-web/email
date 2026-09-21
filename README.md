@@ -42,7 +42,12 @@ sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/puen0209-web/email/
 curl -fsSL https://raw.githubusercontent.com/puen0209-web/email/main/install.sh | sudo bash
 ```
 
-> 💡 安装完成后，在浏览器访问 `http://<你的VPS公网IP>:8080` 即可开始使用，默认管理口令为 `admin888`。
+> 💡 **智能端口识别**：脚本会自动检测 8080 端口是否被其他服务占用；若被占用，将**自动切换至空闲端口（如 8090 / 8088）**并提示最终访问地址。
+>
+> 🔧 **自定义端口运行**（如指定使用 8090 端口）：
+> ```bash
+> sudo PORT=8090 bash -c "$(curl -fsSL https://raw.githubusercontent.com/puen0209-web/email/main/install.sh)"
+> ```
 
 ---
 
