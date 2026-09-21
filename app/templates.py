@@ -33,7 +33,7 @@ def render_email_html(
     for item in anniversaries[:4]:  # 最多精选展示前4个重要节点
         is_today = item.get("is_today", False)
         badge_style = "background: linear-gradient(135deg, #ff416c, #ff4b2b); color: #ffffff;" if is_today else "background: #fff0f3; color: #e11d48; border: 1px solid #fecdd3;"
-        tag_text = "🎉 就是今天！" if is_today else f"倒计时 <strong>{item.get('days_remaining')}</strong> 天"
+        tag_text = item.get("badge_text") or ("🎉 就是今天！" if is_today else f"还剩 <strong>{item.get('days_remaining')}</strong> 天")
         
         anniv_items_html += f"""
         <tr style="border-bottom: 1px dashed #f3f4f6;">

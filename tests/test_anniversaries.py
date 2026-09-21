@@ -50,10 +50,27 @@ def test_non_repeating_anniversary():
     assert res["days_remaining"] == 10
     assert not res["is_today"]
 
-    # 过去单次事件
+    # 过去单次事件展示已度过
     past_item = AnniversaryItem(name="旧事", date="2024-05-01", repeat_annually=False, icon="📌")
     res_past = calculate_next_anniversary(past_item, target_date=today)
     assert res_past["days_remaining"] == -31
+    assert "已度过" in res_past["badge_text"]
+    assert "31" in res_past["badge_text"]
+
+
+def test_together_and_birthday_passed_display():
+    today = date(2024, 6, 1)
+    # 在一起纪念日
+    together_item = AnniversaryItem(name="我们在一起", date="2023-01-01", repeat_annually=True, icon="❤️")
+    res_together = calculate_next_anniversary(together_item, target_date=today)
+    assert "已相伴" in res_together["badge_text"]
+    assert res_together["days_passed"] > 500
+
+    # 生日纪念
+    bday_item = AnniversaryItem(name="宝贝生日", date="2000-01-01", repeat_annually=True, icon="🎂")
+    res_bday = calculate_next_anniversary(bday_item, target_date=today)
+    assert "已度过" in res_bday["badge_text"]
+    assert res_bday["days_passed"] > 8000
 
 
 def test_get_sorted_anniversaries():

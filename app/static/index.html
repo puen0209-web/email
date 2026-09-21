@@ -260,10 +260,11 @@
                     <table class="min-w-full divide-y divide-slate-100 text-sm">
                         <thead>
                             <tr class="text-slate-500 text-xs text-left bg-slate-50/50">
-                                <th class="py-2.5 px-3">图标</th>
+                                <th class="py-2.5 px-3 w-16">图标</th>
                                 <th class="py-2.5 px-3">事件名称</th>
                                 <th class="py-2.5 px-3">基准日期 (YYYY-MM-DD)</th>
                                 <th class="py-2.5 px-3">每年重复</th>
+                                <th class="py-2.5 px-3">度过/倒数状态预览</th>
                                 <th class="py-2.5 px-3 text-right">操作</th>
                             </tr>
                         </thead>
@@ -712,6 +713,52 @@
             renderAnniversariesTable(cfg.anniversaries || []);
         }
 
+        function computeItemPreview(item) {
+            if (!item.date) return '<span class="text-slate-400 text-xs">未设置日期</span>';
+            const orig = new Date(item.date);
+            if (isNaN(orig.getTime())) return '<span class="text-slate-400 text-xs">格式错误</span>';
+            
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+            orig.setHours(0, 0, 0, 0);
+            
+            const diffDays = Math.floor((now - orig) / (1000 * 60 * 60 * 24));
+            const name = item.name || '';
+            const isBirthday = name.includes('生日') || name.includes('出生');
+            const isTogether = name.includes('在一起') || name.includes('恋爱') || name.includes('相爱') || name.includes('结婚') || name.includes('领证');
+
+            if (item.repeat_annually) {
+                const thisYear = new Date(now.getFullYear(), orig.getMonth(), orig.getDate());
+                let nextDate = thisYear;
+                if (thisYear < now) {
+                    nextDate = new Date(now.getFullYear() + 1, orig.getMonth(), orig.getDate());
+                }
+                const remaining = Math.round((nextDate - now) / (1000 * 60 * 60 * 24));
+                const isToday = (remaining === 0);
+
+                if (isToday) {
+                    return '<span class="px-2 py-0.5 rounded-full bg-rose-500 text-white text-xs font-bold animate-pulse">🎉 就是今天！</span>';
+                }
+                
+                if (isTogether) {
+                    const days = Math.max(1, diffDays + 1);
+                    return `<span class="text-rose-600 font-semibold">已相伴 ${days} 天</span> <span class="text-slate-400 text-[11px]">(距下次 ${remaining}天)</span>`;
+                } else if (isBirthday || diffDays >= 0) {
+                    return `<span class="text-pink-600 font-semibold">已度过 ${diffDays} 天</span> <span class="text-slate-400 text-[11px]">(距下次 ${remaining}天)</span>`;
+                } else {
+                    return `<span class="text-amber-600 font-semibold">还剩 ${remaining} 天</span>`;
+                }
+            } else {
+                if (diffDays === 0) {
+                    return '<span class="px-2 py-0.5 rounded-full bg-rose-500 text-white text-xs font-bold">🎉 就是今天！</span>';
+                } else if (diffDays > 0) {
+                    return `<span class="text-slate-600 font-medium">已度过 ${diffDays} 天</span>`;
+                } else {
+                    return `<span class="text-blue-600 font-semibold">还剩 ${Math.abs(diffDays)} 天</span>`;
+                }
+            }
+        }
+
         function renderAnniversariesTable(items) {
             const tbody = document.getElementById('anniversariesTableBody');
             tbody.innerHTML = '';
@@ -731,6 +778,9 @@
                     </td>
                     <td class="py-2.5 px-3">
                         <input type="checkbox" ${item.repeat_annually ? 'checked' : ''} class="rounded text-rose-500 h-4 w-4" onchange="updateAnnivItem(${index}, 'repeat_annually', this.checked)">
+                    </td>
+                    <td class="py-2.5 px-3" id="anniv-preview-${index}">
+                        ${computeItemPreview(item)}
                     </td>
                     <td class="py-2.5 px-3 text-right">
                         <button onclick="removeAnnivItem(${index})" class="text-rose-500 hover:text-rose-700 text-xs px-2 py-1 hover:bg-rose-50 rounded transition">删除</button>
@@ -755,6 +805,10 @@
         function updateAnnivItem(index, key, val) {
             if (currentConfig && currentConfig.anniversaries[index]) {
                 currentConfig.anniversaries[index][key] = val;
+                const cell = document.getElementById(`anniv-preview-${index}`);
+                if (cell) {
+                    cell.innerHTML = computeItemPreview(currentConfig.anniversaries[index]);
+                }
             }
         }
 
