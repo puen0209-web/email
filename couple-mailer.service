@@ -1,0 +1,28 @@
+[Unit]
+Description=Couple Daily Automation Mailer Service (情侣每日暖心早报守护服务)
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+# 将 WorkingDirectory 修改为你实际部署项目的绝对路径，例如 /opt/couple-mailer
+WorkingDirectory=/opt/couple-mailer
+# 将 ExecStart 中的 Python 路径指向你的虚拟环境，例如 /opt/couple-mailer/.venv/bin/python
+ExecStart=/opt/couple-mailer/.venv/bin/python run.py
+
+# 环境变量设置
+Environment="PYTHONUNBUFFERED=1"
+Environment="TZ=Asia/Shanghai"
+Environment="HOST=0.0.0.0"
+Environment="PORT=8080"
+
+# 异常崩溃自动拉起
+Restart=always
+RestartSec=5s
+
+# 资源限制防泄漏
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

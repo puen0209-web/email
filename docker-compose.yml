@@ -1,0 +1,18 @@
+services:
+  couple-mailer:
+    build: .
+    container_name: couple-mailer
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - TZ=Asia/Shanghai
+      - HOST=0.0.0.0
+      - PORT=8080
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/').read()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Couple Mailer · 情侣每日暖心早报管理后台</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        rose: {
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            200: '#fecdd3',
+                            500: '#f43f5e',
+                            600: '#e11d48',
+                            700: '#be123c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background-color: #faf7f7;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col antialiased">
+
+    <!-- 顶部导航栏 -->
+    <header class="bg-white/80 backdrop-blur-md border-b border-rose-100 sticky top-0 z-30">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl">💌</span>
+                <div>
+                    <h1 class="font-bold text-lg text-slate-800 leading-tight">Couple Mailer</h1>
+                    <p class="text-xs text-rose-600 font-medium">情侣每日早报 · 可视化控制台</p>
+                </div>
+            </div>
+
+            <!-- 状态与快捷操作 -->
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <div id="statusBadge" class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
+                    <span id="nextRunLabel">调度器同步中...</span>
+                </div>
+
+                <button onclick="openKeyModal()" title="设置管理密码" class="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                </button>
+
+                <button onclick="previewEmail()" class="inline-flex items-center px-3 py-1.5 border border-slate-300 text-xs sm:text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 shadow-sm transition">
+                    <svg class="w-4 h-4 mr-1 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    实时预览
+                </button>
+
+                <button onclick="openTestSendModal()" class="inline-flex items-center px-3 py-1.5 border border-rose-200 text-xs sm:text-sm font-medium rounded-lg text-rose-700 bg-rose-50 hover:bg-rose-100 shadow-sm transition">
+                    <svg class="w-4 h-4 mr-1 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                    测试发送
+                </button>
+
+                <button onclick="saveConfig()" id="saveBtn" class="inline-flex items-center px-3.5 py-1.5 text-xs sm:text-sm font-medium rounded-lg text-white bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 shadow-md shadow-rose-200 transition">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                    保存配置
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主体容器 -->
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 space-y-8">
+
+        <!-- 快速概览状态条 -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white p-4 rounded-xl border border-rose-100 shadow-sm flex items-center space-x-3">
+                <div class="p-3 bg-rose-50 text-rose-600 rounded-lg text-xl">⏰</div>
+                <div>
+                    <div class="text-xs text-slate-500">每日发送时间</div>
+                    <div id="statDailyTime" class="text-base font-bold text-slate-800">--:--</div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-rose-100 shadow-sm flex items-center space-x-3">
+                <div class="p-3 bg-blue-50 text-blue-600 rounded-lg text-xl">📍</div>
+                <div>
+                    <div class="text-xs text-slate-500">定位与伴侣</div>
+                    <div id="statPartnerCity" class="text-base font-bold text-slate-800">-- · --</div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-rose-100 shadow-sm flex items-center space-x-3">
+                <div class="p-3 bg-pink-50 text-pink-600 rounded-lg text-xl">💖</div>
+                <div>
+                    <div class="text-xs text-slate-500">相伴相爱天数</div>
+                    <div id="statDaysCount" class="text-base font-bold text-rose-600">-- 天</div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-rose-100 shadow-sm flex items-center space-x-3">
+                <div class="p-3 bg-emerald-50 text-emerald-600 rounded-lg text-xl">🚀</div>
+                <div>
+                    <div class="text-xs text-slate-500">上次投递状态</div>
+                    <div id="statLastStatus" class="text-base font-bold text-slate-700">暂无记录</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 卡片网格 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- 1. 邮件发送与定时设置 -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-5">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-rose-500 text-lg">📧</span>
+                        <h2 class="font-bold text-slate-800">邮件投递与定时</h2>
+                    </div>
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="schedulerEnabled" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-500"></div>
+                        <span class="ml-2 text-xs font-medium text-slate-600">自动定时</span>
+                    </label>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">每日定时投递 (24小时制)</label>
+                        <input type="time" id="dailyTime" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 focus:border-rose-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">发件人显示昵称</label>
+                        <input type="text" id="senderName" placeholder="例如：你的小熊" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-medium text-slate-600 mb-1">SMTP 主机</label>
+                        <input type="text" id="smtpHost" placeholder="smtp.qq.com / smtp.gmail.com" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">端口</label>
+                        <input type="number" id="smtpPort" placeholder="465" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500">
+                    </div>
+                </div>
+
+                <div class="flex items-center">
+                    <input type="checkbox" id="smtpSsl" class="rounded text-rose-500 focus:ring-rose-500 h-4 w-4 border-slate-300">
+                    <label for="smtpSsl" class="ml-2 text-xs text-slate-600">使用 SSL/TLS 直连（465 端口请勾选；587 端口取消勾选自动使用 STARTTLS）</label>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">发件人邮箱</label>
+                        <input type="email" id="senderEmail" placeholder="your_email@qq.com" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">发件邮箱授权码 / 应用密码</label>
+                        <input type="password" id="senderPassword" placeholder="QQ/163/Gmail 专属授权密码" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">伴侣收件人邮箱</label>
+                        <input type="email" id="partnerEmail" placeholder="partner@example.com" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">抄送给我也发一份 (可选)</label>
+                        <input type="email" id="ccEmail" placeholder="可留空，或填自己的邮箱" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 伴侣与基础信息 -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-5">
+                <div class="flex items-center space-x-2 border-b border-slate-100 pb-3">
+                    <span class="text-rose-500 text-lg">💑</span>
+                    <h2 class="font-bold text-slate-800">伴侣与相恋基础信息</h2>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">伴侣昵称 / 称谓</label>
+                        <input type="text" id="partnerName" placeholder="例如：亲爱的宝贝、小仙女" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">目标城市 (获取实时天气)</label>
+                        <input type="text" id="targetCity" placeholder="如 上海 / 北京 / Melbourne" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">相恋起始日期 (纪念日起点)</label>
+                    <input type="date" id="relationshipStartDate" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500">
+                    <p class="text-xs text-slate-400 mt-1">系统将自动从该日期起计算两人相伴的总天数并呈现在邮件头部徽章。</p>
+                </div>
+
+                <!-- 阈值规则设置 -->
+                <div class="border-t border-slate-100 pt-4 space-y-3">
+                    <h3 class="text-xs font-bold text-slate-700">🌤️ 智能穿衣与天气预警阈值</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div>
+                            <label class="block text-[11px] text-slate-500 mb-1">降雨预警 (PoP %)</label>
+                            <input type="number" id="ruleRainPop" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500" value="30">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-500 mb-1">昼夜温差 (ΔT °C)</label>
+                            <input type="number" step="0.5" id="ruleTempSwing" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500" value="8">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-500 mb-1">防暑高温 (°C)</label>
+                            <input type="number" step="0.5" id="ruleHot" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500" value="28">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-500 mb-1">御寒低温 (°C)</label>
+                            <input type="number" step="0.5" id="ruleCold" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500" value="12">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. 自定义纪念日与倒计时列表 (CRUD) -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-4 lg:col-span-2">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-rose-500 text-lg">🎉</span>
+                        <h2 class="font-bold text-slate-800">浪漫纪念日与倒计时管理</h2>
+                    </div>
+                    <button onclick="addAnniversaryRow()" class="inline-flex items-center px-3 py-1 bg-rose-50 text-rose-600 hover:bg-rose-100 text-xs font-semibold rounded-lg transition">
+                        + 添加新纪念日
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-100 text-sm">
+                        <thead>
+                            <tr class="text-slate-500 text-xs text-left bg-slate-50/50">
+                                <th class="py-2.5 px-3">图标</th>
+                                <th class="py-2.5 px-3">事件名称</th>
+                                <th class="py-2.5 px-3">基准日期 (YYYY-MM-DD)</th>
+                                <th class="py-2.5 px-3">每年重复</th>
+                                <th class="py-2.5 px-3 text-right">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="anniversariesTableBody" class="divide-y divide-slate-100">
+                            <!-- 动态渲染 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 4. AI 早安情话与大模型 Token 设置 -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-5">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-rose-500 text-lg">🤖</span>
+                        <h2 class="font-bold text-slate-800">AI 晨间情话 (OpenAI 兼容规范)</h2>
+                    </div>
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="aiEnabled" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-500"></div>
+                        <span class="ml-2 text-xs font-medium text-slate-600">开启生成</span>
+                    </label>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">API Base URL (支持 OpenAI, DeepSeek, Ollama, 通义千问等)</label>
+                        <input type="text" id="aiBaseUrl" placeholder="https://api.openai.com/v1" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">API Key / Token 密钥</label>
+                            <input type="password" id="aiApiKey" placeholder="sk-..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">模型名称 (Model)</label>
+                            <input type="text" id="aiModel" placeholder="gpt-4o-mini / deepseek-chat / qwen-plus" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">系统提示词 / 语气设定 (System Prompt)</label>
+                        <textarea id="aiSystemPrompt" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500"></textarea>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-1">
+                        <span class="text-xs text-slate-400">支持一键验证当前大模型 Token 连通性</span>
+                        <button onclick="testAIConnection()" id="testAIBtn" class="inline-flex items-center px-3 py-1.5 border border-slate-200 hover:bg-slate-50 text-xs font-medium rounded-lg text-slate-700 transition">
+                            ⚡ 测试大模型响应
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. 备用情话语录库 -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-rose-500 text-lg">📖</span>
+                        <h2 class="font-bold text-slate-800">备用情话与暖心语录库</h2>
+                    </div>
+                    <span class="text-xs text-slate-400">当未开启 AI 或接口超时时代替展示</span>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">备用情话列表（每行一条）</label>
+                    <textarea id="fallbackQuotes" rows="8" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 custom-scrollbar font-sans leading-relaxed"></textarea>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-slate-200/80 py-4 text-center text-xs text-slate-400">
+        Couple Mailer Automation Service · 甜蜜自动化，相伴每一天
+    </footer>
+
+    <!-- 弹窗 1：设置管理员密码 Key Modal -->
+    <div id="keyModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-rose-100 space-y-4">
+            <h3 class="font-bold text-base text-slate-800 flex items-center space-x-2">
+                <span>🔐</span>
+                <span>设置访问口令 (Admin Key)</span>
+            </h3>
+            <p class="text-xs text-slate-500">请输入服务端配置的管理密码以获得读写权限，口令将保存在本地浏览器中。</p>
+            <div>
+                <input type="password" id="modalKeyInput" placeholder="默认密码为 admin888" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500">
+            </div>
+            <div class="flex justify-end space-x-2">
+                <button onclick="closeKeyModal()" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg">取消</button>
+                <button onclick="saveAdminKey()" class="px-3 py-1.5 text-xs bg-rose-500 hover:bg-rose-600 text-white rounded-lg font-medium">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗 2：邮件实时预览 Modal -->
+    <div id="previewModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-2xl w-full h-[90vh] flex flex-col shadow-2xl border border-rose-100 overflow-hidden">
+            <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-rose-50/50">
+                <h3 class="font-bold text-sm text-slate-800 flex items-center space-x-1.5">
+                    <span>👁️</span>
+                    <span>早报实际渲染效果预览 (实时拉取天气与数据)</span>
+                </h3>
+                <button onclick="closePreviewModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="flex-1 bg-slate-100 p-2 sm:p-4 overflow-hidden">
+                <iframe id="previewIframe" class="w-full h-full bg-white rounded-xl shadow-inner border-0"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗 3：测试发送确认 Modal -->
+    <div id="testSendModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-rose-100 space-y-4">
+            <h3 class="font-bold text-base text-slate-800 flex items-center space-x-2">
+                <span>🚀</span>
+                <span>立即发送测试邮件</span>
+            </h3>
+            <p class="text-xs text-slate-500">将即刻生成最新天气、相伴天数与早安情话并投递。你可以临时指定测试接收邮箱，也可以直接投递到配置的伴侣邮箱。</p>
+            <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">测试接收人邮箱 (留空则发给伴侣)</label>
+                <input type="email" id="testOverrideEmail" placeholder="留空默认发往配置的伴侣信箱" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500">
+            </div>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeTestSendModal()" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg">取消</button>
+                <button onclick="confirmTestSend()" id="confirmSendBtn" class="px-4 py-1.5 text-xs bg-rose-500 hover:bg-rose-600 text-white rounded-lg font-medium shadow-sm flex items-center">
+                    <span>开始投递</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 全局 Toast 提示容器 -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+    <script>
+        let currentConfig = null;
+
+        function getAuthHeader() {
+            const key = localStorage.getItem('couple_mailer_admin_key') || 'admin888';
+            return { 'X-Admin-Key': key };
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            const bg = type === 'success' ? 'bg-emerald-600' : (type === 'error' ? 'bg-rose-600' : 'bg-slate-800');
+            toast.className = `${bg} text-white px-4 py-2.5 rounded-xl shadow-lg text-xs font-medium flex items-center space-x-2 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto`;
+            toast.innerHTML = `<span>${type === 'success' ? '✅' : (type === 'error' ? '❌' : 'ℹ️')}</span><span>${message}</span>`;
+            
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 20);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        async function fetchConfig() {
+            try {
+                const res = await fetch('/api/config', { headers: getAuthHeader() });
+                if (res.status === 401) {
+                    showToast('管理口令未配置或错误，请点击右上角钥匙设置', 'error');
+                    openKeyModal();
+                    return;
+                }
+                const data = await res.json();
+                if (data.code === 0) {
+                    currentConfig = data.data;
+                    renderForm(currentConfig);
+                    fetchStatus();
+                }
+            } catch (e) {
+                showToast('无法连接后端服务: ' + e.message, 'error');
+            }
+        }
+
+        async function fetchStatus() {
+            try {
+                const res = await fetch('/api/status', { headers: getAuthHeader() });
+                if (res.ok) {
+                    const json = await res.json();
+                    const d = json.data;
+                    document.getElementById('nextRunLabel').innerText = d.next_run_time ? `下次发送: ${d.next_run_time}` : '定时器已暂停';
+                    document.getElementById('statDailyTime').innerText = d.daily_time || '--:--';
+                    document.getElementById('statPartnerCity').innerText = `${d.city || '--'} · ${d.partner_name || '--'}`;
+                    document.getElementById('statLastStatus').innerText = d.last_status ? `${d.last_status} (${d.last_run_time || ''})` : '暂未运行';
+                }
+            } catch (e) {}
+        }
+
+        function renderForm(cfg) {
+            // 基础信息
+            document.getElementById('partnerName').value = cfg.basic.partner_name || '';
+            document.getElementById('targetCity').value = cfg.basic.city || '';
+            document.getElementById('relationshipStartDate').value = cfg.basic.relationship_start_date || '';
+
+            // 计算相伴天数
+            if (cfg.basic.relationship_start_date) {
+                const start = new Date(cfg.basic.relationship_start_date);
+                const now = new Date();
+                const diffDays = Math.max(1, Math.floor((now - start) / (1000 * 60 * 60 * 24)) + 1);
+                document.getElementById('statDaysCount').innerText = `${diffDays} 天`;
+            }
+
+            // 发送与 SMTP
+            document.getElementById('dailyTime').value = cfg.recipient.daily_time || '07:30';
+            document.getElementById('schedulerEnabled').checked = !!cfg.recipient.scheduler_enabled;
+            document.getElementById('senderName').value = cfg.recipient.sender_name || '';
+            document.getElementById('smtpHost').value = cfg.recipient.smtp_host || '';
+            document.getElementById('smtpPort').value = cfg.recipient.smtp_port || 465;
+            document.getElementById('smtpSsl').checked = !!cfg.recipient.smtp_ssl;
+            document.getElementById('senderEmail').value = cfg.recipient.sender_email || '';
+            document.getElementById('senderPassword').value = cfg.recipient.sender_password || '';
+            document.getElementById('partnerEmail').value = cfg.recipient.partner_email || '';
+            document.getElementById('ccEmail').value = cfg.recipient.cc_email || '';
+
+            // 天气阈值
+            document.getElementById('ruleRainPop').value = cfg.weather_rules.rain_pop_threshold ?? 30;
+            document.getElementById('ruleTempSwing').value = cfg.weather_rules.temp_swing_threshold ?? 8.0;
+            document.getElementById('ruleHot').value = cfg.weather_rules.hot_threshold ?? 28.0;
+            document.getElementById('ruleCold').value = cfg.weather_rules.cold_threshold ?? 12.0;
+
+            // AI 设置
+            document.getElementById('aiEnabled').checked = !!cfg.ai.enabled;
+            document.getElementById('aiBaseUrl').value = cfg.ai.base_url || 'https://api.openai.com/v1';
+            document.getElementById('aiApiKey').value = cfg.ai.api_key || '';
+            document.getElementById('aiModel').value = cfg.ai.model || 'gpt-4o-mini';
+            document.getElementById('aiSystemPrompt').value = cfg.ai.system_prompt || '';
+
+            // 备用语录
+            document.getElementById('fallbackQuotes').value = (cfg.fallback_quotes || []).join('\n');
+
+            // 纪念日表格渲染
+            renderAnniversariesTable(cfg.anniversaries || []);
+        }
+
+        function renderAnniversariesTable(items) {
+            const tbody = document.getElementById('anniversariesTableBody');
+            tbody.innerHTML = '';
+
+            items.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50/60 transition';
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3">
+                        <input type="text" value="${item.icon || '❤️'}" class="w-12 text-center px-1.5 py-1 border border-slate-200 rounded text-sm focus:ring-1 focus:ring-rose-500" onchange="updateAnnivItem(${index}, 'icon', this.value)">
+                    </td>
+                    <td class="py-2.5 px-3">
+                        <input type="text" value="${item.name || ''}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm focus:ring-1 focus:ring-rose-500" onchange="updateAnnivItem(${index}, 'name', this.value)">
+                    </td>
+                    <td class="py-2.5 px-3">
+                        <input type="date" value="${item.date || ''}" class="px-2 py-1 border border-slate-200 rounded text-sm focus:ring-1 focus:ring-rose-500" onchange="updateAnnivItem(${index}, 'date', this.value)">
+                    </td>
+                    <td class="py-2.5 px-3">
+                        <input type="checkbox" ${item.repeat_annually ? 'checked' : ''} class="rounded text-rose-500 h-4 w-4" onchange="updateAnnivItem(${index}, 'repeat_annually', this.checked)">
+                    </td>
+                    <td class="py-2.5 px-3 text-right">
+                        <button onclick="removeAnnivItem(${index})" class="text-rose-500 hover:text-rose-700 text-xs px-2 py-1 hover:bg-rose-50 rounded transition">删除</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function addAnniversaryRow() {
+            if (!currentConfig) return;
+            currentConfig.anniversaries.push({
+                id: Math.random().toString(36).substring(2, 9),
+                name: '新纪念日',
+                date: new Date().toISOString().split('T')[0],
+                repeat_annually: true,
+                icon: '❤️'
+            });
+            renderAnniversariesTable(currentConfig.anniversaries);
+        }
+
+        function updateAnnivItem(index, key, val) {
+            if (currentConfig && currentConfig.anniversaries[index]) {
+                currentConfig.anniversaries[index][key] = val;
+            }
+        }
+
+        function removeAnnivItem(index) {
+            if (currentConfig && currentConfig.anniversaries) {
+                currentConfig.anniversaries.splice(index, 1);
+                renderAnniversariesTable(currentConfig.anniversaries);
+            }
+        }
+
+        async function saveConfig() {
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="animate-spin mr-1">⏳</span>保存中...';
+
+            const payload = {
+                basic: {
+                    partner_name: document.getElementById('partnerName').value.trim(),
+                    city: document.getElementById('targetCity').value.trim(),
+                    relationship_start_date: document.getElementById('relationshipStartDate').value.trim()
+                },
+                recipient: {
+                    daily_time: document.getElementById('dailyTime').value.trim(),
+                    scheduler_enabled: document.getElementById('schedulerEnabled').checked,
+                    sender_name: document.getElementById('senderName').value.trim(),
+                    smtp_host: document.getElementById('smtpHost').value.trim(),
+                    smtp_port: parseInt(document.getElementById('smtpPort').value) || 465,
+                    smtp_ssl: document.getElementById('smtpSsl').checked,
+                    sender_email: document.getElementById('senderEmail').value.trim(),
+                    sender_password: document.getElementById('senderPassword').value.trim(),
+                    partner_email: document.getElementById('partnerEmail').value.trim(),
+                    cc_email: document.getElementById('ccEmail').value.trim()
+                },
+                weather_rules: {
+                    rain_pop_threshold: parseInt(document.getElementById('ruleRainPop').value) || 30,
+                    temp_swing_threshold: parseFloat(document.getElementById('ruleTempSwing').value) || 8.0,
+                    hot_threshold: parseFloat(document.getElementById('ruleHot').value) || 28.0,
+                    cold_threshold: parseFloat(document.getElementById('ruleCold').value) || 12.0
+                },
+                ai: {
+                    enabled: document.getElementById('aiEnabled').checked,
+                    base_url: document.getElementById('aiBaseUrl').value.trim(),
+                    api_key: document.getElementById('aiApiKey').value.trim(),
+                    model: document.getElementById('aiModel').value.trim(),
+                    system_prompt: document.getElementById('aiSystemPrompt').value.trim(),
+                    temperature: 0.7,
+                    max_tokens: 200
+                },
+                anniversaries: currentConfig.anniversaries,
+                fallback_quotes: document.getElementById('fallbackQuotes').value.split('\n').map(s => s.trim()).filter(Boolean),
+                security: {
+                    admin_password: localStorage.getItem('couple_mailer_admin_key') || 'admin888'
+                }
+            };
+
+            try {
+                const res = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...getAuthHeader()
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok && data.code === 0) {
+                    showToast('🎉 配置保存成功，调度器已即刻热生效！', 'success');
+                    fetchConfig();
+                } else {
+                    showToast('保存失败: ' + (data.message || '格式校验异常'), 'error');
+                }
+            } catch (e) {
+                showToast('保存请求异常: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>保存配置`;
+            }
+        }
+
+        async function previewEmail() {
+            const modal = document.getElementById('previewModal');
+            const iframe = document.getElementById('previewIframe');
+            iframe.src = '/api/preview?key=' + encodeURIComponent(localStorage.getItem('couple_mailer_admin_key') || 'admin888');
+            modal.classList.remove('hidden');
+        }
+
+        function closePreviewModal() {
+            document.getElementById('previewModal').classList.add('hidden');
+        }
+
+        function openTestSendModal() {
+            document.getElementById('testSendModal').classList.remove('hidden');
+        }
+
+        function closeTestSendModal() {
+            document.getElementById('testSendModal').classList.add('hidden');
+        }
+
+        async function confirmTestSend() {
+            const btn = document.getElementById('confirmSendBtn');
+            const overrideTo = document.getElementById('testOverrideEmail').value.trim();
+            btn.disabled = true;
+            btn.innerText = '正在生成并投递...';
+
+            try {
+                const res = await fetch('/api/test-send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...getAuthHeader()
+                    },
+                    body: JSON.stringify({ override_to: overrideTo || null })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('💌 ' + data.message, 'success');
+                    closeTestSendModal();
+                    fetchStatus();
+                } else {
+                    showToast('发送失败: ' + data.message, 'error');
+                }
+            } catch (e) {
+                showToast('测试发送异常: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = '开始投递';
+            }
+        }
+
+        async function testAIConnection() {
+            const btn = document.getElementById('testAIBtn');
+            btn.disabled = true;
+            btn.innerText = '生成中...';
+
+            const payload = {
+                enabled: true,
+                base_url: document.getElementById('aiBaseUrl').value.trim(),
+                api_key: document.getElementById('aiApiKey').value.trim(),
+                model: document.getElementById('aiModel').value.trim(),
+                system_prompt: document.getElementById('aiSystemPrompt').value.trim(),
+                temperature: 0.7,
+                max_tokens: 100
+            };
+
+            try {
+                const res = await fetch('/api/test-ai', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...getAuthHeader()
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`✨ 模型响应成功:\n"${data.content}"`, 'success');
+                } else {
+                    showToast('测试失败: ' + data.error, 'error');
+                }
+            } catch (e) {
+                showToast('测试请求发生错误: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = '⚡ 测试大模型响应';
+            }
+        }
+
+        function openKeyModal() {
+            document.getElementById('modalKeyInput').value = localStorage.getItem('couple_mailer_admin_key') || 'admin888';
+            document.getElementById('keyModal').classList.remove('hidden');
+        }
+
+        function closeKeyModal() {
+            document.getElementById('keyModal').classList.add('hidden');
+        }
+
+        function saveAdminKey() {
+            const val = document.getElementById('modalKeyInput').value.trim();
+            if (val) {
+                localStorage.setItem('couple_mailer_admin_key', val);
+                showToast('管理口令已更新保存！', 'success');
+                closeKeyModal();
+                fetchConfig();
+            }
+        }
+
+        // 初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchConfig();
+            setInterval(fetchStatus, 30000); // 30秒轮询调度状态
+        });
+    </script>
+</body>
+</html>
