@@ -94,7 +94,12 @@ class DailyMailerScheduler:
 
         try:
             # 1. 天气与穿衣
-            weather_data = await fetch_weather_data(config.basic.city, config.weather_rules)
+            weather_data = await fetch_weather_data(
+                city=config.basic.city,
+                rules=config.weather_rules,
+                district=getattr(config.basic, "district", ""),
+                country=getattr(config.basic, "country", "")
+            )
 
             # 2. 纪念日计算
             days_together = calculate_days_together(config.basic.relationship_start_date)

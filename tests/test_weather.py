@@ -69,9 +69,16 @@ def test_parse_wttr_response():
         ]
     }
     rules = WeatherRulesConfig()
-    result = parse_wttr_response("上海", mock_data, rules)
-    assert result["city"] == "上海"
+    result = parse_wttr_response("上海 · 浦东新区", mock_data, rules)
+    assert result["city"] == "上海 · 浦东新区"
     assert result["current_temp"] == 23
     assert result["condition"] == "多云"
     assert result["rain_chance"] == 55
     assert len(result["dressing_advice"]) >= 2
+
+
+def test_get_fallback_weather_with_district():
+    rules = WeatherRulesConfig()
+    fb = get_fallback_weather("墨尔本 · Carlton", rules)
+    assert fb["city"] == "墨尔本 · Carlton"
+    assert fb["is_fallback"] is True

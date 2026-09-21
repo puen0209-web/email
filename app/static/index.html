@@ -196,38 +196,51 @@
                         <input type="text" id="partnerName" placeholder="例如：亲爱的宝贝、小仙女" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">目标城市 (获取实时天气)</label>
-                        <input type="text" id="targetCity" placeholder="如 上海 / 北京 / Melbourne" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500">
+                        <label class="block text-xs font-medium text-slate-600 mb-1">相恋起始日期 (纪念日起点)</label>
+                        <input type="date" id="relationshipStartDate" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500">
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">相恋起始日期 (纪念日起点)</label>
-                    <input type="date" id="relationshipStartDate" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500">
-                    <p class="text-xs text-slate-400 mt-1">系统将自动从该日期起计算两人相伴的总天数并呈现在邮件头部徽章。</p>
-                </div>
-
-                <!-- 阈值规则设置 -->
+                <!-- 地点框选：国家、城市、区县/郊区 -->
                 <div class="border-t border-slate-100 pt-4 space-y-3">
-                    <h3 class="text-xs font-bold text-slate-700">🌤️ 智能穿衣与天气预警阈值</h3>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-bold text-slate-700 flex items-center space-x-1.5">
+                            <span>📍</span>
+                            <span>天气位置选择（国家 / 城市 / 郊区）</span>
+                        </label>
+                        <span id="locationPreviewBadge" class="text-[11px] px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200 font-medium">-- · --</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
-                            <label class="block text-[11px] text-slate-500 mb-1">降雨预警 (PoP %)</label>
-                            <input type="number" id="ruleRainPop" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500" value="30">
+                            <label class="block text-[11px] text-slate-500 mb-1">国家 / 地区</label>
+                            <select id="countrySelect" onchange="onCountryChange()" class="w-full px-2.5 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 bg-white">
+                                <option value="中国">🇨🇳 中国 (China)</option>
+                                <option value="澳大利亚">🇦🇺 澳大利亚 (Australia)</option>
+                                <option value="日本">🇯🇵 日本 (Japan)</option>
+                                <option value="美国">🇺🇸 美国 (USA)</option>
+                                <option value="英国">🇬🇧 英国 (UK)</option>
+                                <option value="加拿大">🇨🇦 加拿大 (Canada)</option>
+                                <option value="其他">🌐 其他国家 (自定义输入)</option>
+                            </select>
+                            <input type="text" id="countryCustomInput" placeholder="输入国家名称" class="w-full px-2.5 py-1.5 mt-1 border border-slate-300 rounded-lg text-xs hidden" oninput="updateLocationPreview()">
                         </div>
+
                         <div>
-                            <label class="block text-[11px] text-slate-500 mb-1">昼夜温差 (ΔT °C)</label>
-                            <input type="number" step="0.5" id="ruleTempSwing" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500" value="8">
+                            <label class="block text-[11px] text-slate-500 mb-1">城市 / 地区</label>
+                            <select id="citySelect" onchange="onCityChange()" class="w-full px-2.5 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 bg-white">
+                            </select>
+                            <input type="text" id="cityCustomInput" placeholder="输入城市名 (如 上海/Melbourne)" class="w-full px-2.5 py-1.5 mt-1 border border-slate-300 rounded-lg text-xs hidden" oninput="updateLocationPreview()">
                         </div>
+
                         <div>
-                            <label class="block text-[11px] text-slate-500 mb-1">防暑高温 (°C)</label>
-                            <input type="number" step="0.5" id="ruleHot" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500" value="28">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] text-slate-500 mb-1">御寒低温 (°C)</label>
-                            <input type="number" step="0.5" id="ruleCold" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500" value="12">
+                            <label class="block text-[11px] text-slate-500 mb-1">区县 / 郊区 (Suburb)</label>
+                            <select id="districtSelect" onchange="onDistrictChange()" class="w-full px-2.5 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 bg-white">
+                            </select>
+                            <input type="text" id="districtCustomInput" placeholder="输入区县/郊区名 (如 浦东/Box Hill)" class="w-full px-2.5 py-1.5 mt-1 border border-slate-300 rounded-lg text-xs hidden" oninput="updateLocationPreview()">
                         </div>
                     </div>
+                    <p class="text-[11px] text-slate-400">💡 穿衣出行规则与温差预警由系统智能算法内置评定，无需手动调试复杂阈值。</p>
                 </div>
             </div>
 
@@ -436,6 +449,209 @@
             }
         }
 
+        const LOCATION_DATA = {
+            "中国": {
+                "上海": ["浦东新区", "黄浦区", "静安区", "徐汇区", "长宁区", "普陀区", "虹口区", "杨浦区", "闵行区", "宝山区", "嘉定区", "松江区", "青浦区", "奉贤区", "金山区", "崇明区"],
+                "北京": ["朝阳区", "海淀区", "东城区", "西城区", "丰台区", "石景山区", "通州区", "昌平区", "大兴区", "顺义区", "房山区", "门头沟区"],
+                "广州": ["天河区", "越秀区", "海珠区", "荔湾区", "白云区", "黄埔区", "番禺区", "花都区", "南沙区", "增城区", "从化区"],
+                "深圳": ["南山区", "福田区", "罗湖区", "宝安区", "龙岗区", "龙华区", "坪山区", "盐田区", "光明区", "大鹏新区"],
+                "杭州": ["西湖区", "拱墅区", "上城区", "滨江区", "余杭区", "萧山区", "临平区", "钱塘区", "富阳区"],
+                "成都": ["武侯区", "锦江区", "青羊区", "金牛区", "成华区", "高新区", "天府新区", "双流区", "郫都区", "温江区", "龙泉驿区"],
+                "武汉": ["江汉区", "武昌区", "洪山区", "江岸区", "硚口区", "汉阳区", "东西湖区", "江夏区"],
+                "南京": ["玄武区", "秦淮区", "建邺区", "鼓楼区", "栖霞区", "雨花台区", "江宁区", "浦口区"],
+                "重庆": ["渝中区", "江北区", "渝北区", "南岸区", "沙坪坝区", "九龙坡区", "巴南区"],
+                "西安": ["雁塔区", "碑林区", "莲湖区", "新城区", "未央区", "灞桥区", "长安区"],
+                "苏州": ["姑苏区", "工业园区", "高新区", "吴中区", "相城区", "吴江区", "昆山市"],
+                "天津": ["和平区", "河西区", "南开区", "河东区", "河北区", "红桥区", "滨海新区"],
+                "长沙": ["岳麓区", "芙蓉区", "天心区", "开福区", "雨花区", "望城区"]
+            },
+            "澳大利亚": {
+                "墨尔本 (Melbourne)": ["Melbourne CBD", "Box Hill", "Carlton", "Clayton", "Glen Waverley", "South Yarra", "Docklands", "Richmond", "St Kilda", "Doncaster", "Preston"],
+                "悉尼 (Sydney)": ["Sydney CBD", "Chatswood", "Burwood", "Hurstville", "Parramatta", "Rhodes", "Haymarket", "Zetland", "Bondi", "Eastwood"],
+                "布里斯班 (Brisbane)": ["Brisbane City", "Sunnybank", "South Bank", "Fortitude Valley", "Indooroopilly"],
+                "阿德莱德 (Adelaide)": ["Adelaide City", "North Adelaide", "Norwood", "Glenelg"],
+                "珀斯 (Perth)": ["Perth CBD", "Northbridge", "Fremantle", "Cannington"]
+            },
+            "日本": {
+                "东京 (Tokyo)": ["新宿区", "涩谷区", "港区", "中央区", "千代田区", "世田谷区", "丰岛区", "台东区", "品川区"],
+                "大阪 (Osaka)": ["中央区", "北区", "浪速区", "天王寺区", "西区"],
+                "京都 (Kyoto)": ["下京区", "中京区", "左京区", "东山区", "右京区"]
+            },
+            "美国": {
+                "纽约 (New York)": ["Manhattan", "Brooklyn", "Queens", "Flushing", "Staten Island", "Bronx"],
+                "旧金山 (San Francisco)": ["Downtown", "Mission District", "Sunset", "Richmond", "Soma", "Bayview"],
+                "湾区/硅谷 (Bay Area)": ["San Jose", "Sunnyvale", "Santa Clara", "Mountain View", "Palo Alto", "Fremont"],
+                "洛杉矶 (Los Angeles)": ["Downtown", "Irvine", "Rowland Heights", "Arcadia", "Santa Monica", "Pasadena"],
+                "西雅图 (Seattle)": ["Downtown", "Bellevue", "Redmond", "Kirkland", "Capitol Hill"]
+            },
+            "英国": {
+                "伦敦 (London)": ["City of London", "Westminster", "Camden", "Greenwich", "Kensington", "Canary Wharf"],
+                "曼彻斯特 (Manchester)": ["City Centre", "Salford", "Didsbury", "Trafford"],
+                "爱丁堡 (Edinburgh)": ["Old Town", "New Town", "Leith", "Haymarket"]
+            },
+            "加拿大": {
+                "多伦多 (Toronto)": ["Downtown", "North York", "Markham", "Scarborough", "Richmond Hill"],
+                "温哥华 (Vancouver)": ["Downtown", "Richmond", "Burnaby", "Surrey", "West Vancouver"]
+            }
+        };
+
+        function getSelectedCountry() {
+            const sel = document.getElementById('countrySelect').value;
+            if (sel === '其他') {
+                return document.getElementById('countryCustomInput').value.trim() || '其他';
+            }
+            return sel;
+        }
+
+        function getSelectedCity() {
+            const sel = document.getElementById('citySelect').value;
+            if (sel === 'CUSTOM') {
+                return document.getElementById('cityCustomInput').value.trim();
+            }
+            return sel;
+        }
+
+        function getSelectedDistrict() {
+            const sel = document.getElementById('districtSelect').value;
+            if (sel === 'NONE') return '';
+            if (sel === 'CUSTOM') {
+                return document.getElementById('districtCustomInput').value.trim();
+            }
+            return sel;
+        }
+
+        function updateLocationPreview() {
+            const c = getSelectedCountry();
+            const ct = getSelectedCity();
+            const d = getSelectedDistrict();
+            const parts = [];
+            if (c && c !== '中国') parts.push(c);
+            if (ct) parts.push(ct);
+            if (d) parts.push(d);
+            document.getElementById('locationPreviewBadge').innerText = parts.length > 0 ? parts.join(' · ') : '未选择位置';
+        }
+
+        function onCountryChange() {
+            const country = document.getElementById('countrySelect').value;
+            const customCountry = document.getElementById('countryCustomInput');
+            const citySelect = document.getElementById('citySelect');
+            const customCity = document.getElementById('cityCustomInput');
+
+            if (country === '其他') {
+                customCountry.classList.remove('hidden');
+                citySelect.innerHTML = '<option value="CUSTOM">自定义城市输入</option>';
+                customCity.classList.remove('hidden');
+            } else {
+                customCountry.classList.add('hidden');
+                const cities = Object.keys(LOCATION_DATA[country] || {});
+                citySelect.innerHTML = cities.map(c => `<option value="${c}">${c}</option>`).join('') + '<option value="CUSTOM">其他城市(手动输入)</option>';
+                customCity.classList.add('hidden');
+            }
+            onCityChange();
+        }
+
+        function onCityChange() {
+            const country = document.getElementById('countrySelect').value;
+            const city = document.getElementById('citySelect').value;
+            const customCity = document.getElementById('cityCustomInput');
+            const distSelect = document.getElementById('districtSelect');
+            const customDist = document.getElementById('districtCustomInput');
+
+            if (city === 'CUSTOM') {
+                customCity.classList.remove('hidden');
+                distSelect.innerHTML = '<option value="NONE">不指定区/郊区</option><option value="CUSTOM">手动输入区/郊区</option>';
+            } else {
+                customCity.classList.add('hidden');
+                const distList = (LOCATION_DATA[country] && LOCATION_DATA[country][city]) || [];
+                distSelect.innerHTML = '<option value="NONE">全部 / 不限具体区县</option>' +
+                    distList.map(d => `<option value="${d}">${d}</option>`).join('') +
+                    '<option value="CUSTOM">其他区县/郊区(手动输入)</option>';
+            }
+            onDistrictChange();
+        }
+
+        function onDistrictChange() {
+            const d = document.getElementById('districtSelect').value;
+            const customDist = document.getElementById('districtCustomInput');
+            if (d === 'CUSTOM') {
+                customDist.classList.remove('hidden');
+            } else {
+                customDist.classList.add('hidden');
+            }
+            updateLocationPreview();
+        }
+
+        function renderLocationSelectors(country, city, district) {
+            const countrySel = document.getElementById('countrySelect');
+            const customCountry = document.getElementById('countryCustomInput');
+            const citySel = document.getElementById('citySelect');
+            const customCity = document.getElementById('cityCustomInput');
+            const distSel = document.getElementById('districtSelect');
+            const customDist = document.getElementById('districtCustomInput');
+
+            const isKnownCountry = !!LOCATION_DATA[country];
+            if (isKnownCountry) {
+                countrySel.value = country;
+                customCountry.classList.add('hidden');
+                
+                const cities = Object.keys(LOCATION_DATA[country]);
+                citySel.innerHTML = cities.map(c => `<option value="${c}">${c}</option>`).join('') + '<option value="CUSTOM">其他城市(手动输入)</option>';
+                
+                const isKnownCity = cities.includes(city);
+                if (isKnownCity) {
+                    citySel.value = city;
+                    customCity.classList.add('hidden');
+                    
+                    const districts = LOCATION_DATA[country][city] || [];
+                    distSel.innerHTML = '<option value="NONE">全部 / 不限具体区县</option>' +
+                        districts.map(d => `<option value="${d}">${d}</option>`).join('') +
+                        '<option value="CUSTOM">其他区县/郊区(手动输入)</option>';
+
+                    if (districts.includes(district)) {
+                        distSel.value = district;
+                        customDist.classList.add('hidden');
+                    } else if (district) {
+                        distSel.value = 'CUSTOM';
+                        customDist.value = district;
+                        customDist.classList.remove('hidden');
+                    } else {
+                        distSel.value = 'NONE';
+                        customDist.classList.add('hidden');
+                    }
+                } else {
+                    citySel.value = 'CUSTOM';
+                    customCity.value = city || '';
+                    customCity.classList.remove('hidden');
+                    distSel.innerHTML = '<option value="NONE">不指定区/郊区</option><option value="CUSTOM">手动输入区/郊区</option>';
+                    if (district) {
+                        distSel.value = 'CUSTOM';
+                        customDist.value = district;
+                        customDist.classList.remove('hidden');
+                    } else {
+                        distSel.value = 'NONE';
+                        customDist.classList.add('hidden');
+                    }
+                }
+            } else {
+                countrySel.value = '其他';
+                customCountry.value = country || '';
+                customCountry.classList.remove('hidden');
+                citySel.innerHTML = '<option value="CUSTOM">自定义城市输入</option>';
+                customCity.value = city || '';
+                customCity.classList.remove('hidden');
+                distSel.innerHTML = '<option value="NONE">不指定区/郊区</option><option value="CUSTOM">手动输入区/郊区</option>';
+                if (district) {
+                    distSel.value = 'CUSTOM';
+                    customDist.value = district;
+                    customDist.classList.remove('hidden');
+                } else {
+                    distSel.value = 'NONE';
+                    customDist.classList.add('hidden');
+                }
+            }
+            updateLocationPreview();
+        }
+
         async function fetchStatus() {
             try {
                 const res = await fetch('/api/status', { headers: getAuthHeader() });
@@ -453,8 +669,14 @@
         function renderForm(cfg) {
             // 基础信息
             document.getElementById('partnerName').value = cfg.basic.partner_name || '';
-            document.getElementById('targetCity').value = cfg.basic.city || '';
             document.getElementById('relationshipStartDate').value = cfg.basic.relationship_start_date || '';
+
+            // 联动渲染国家、城市、区县
+            renderLocationSelectors(
+                cfg.basic.country || '中国',
+                cfg.basic.city || '上海',
+                cfg.basic.district || ''
+            );
 
             // 计算相伴天数
             if (cfg.basic.relationship_start_date) {
@@ -475,12 +697,6 @@
             document.getElementById('senderPassword').value = cfg.recipient.sender_password || '';
             document.getElementById('partnerEmail').value = cfg.recipient.partner_email || '';
             document.getElementById('ccEmail').value = cfg.recipient.cc_email || '';
-
-            // 天气阈值
-            document.getElementById('ruleRainPop').value = cfg.weather_rules.rain_pop_threshold ?? 30;
-            document.getElementById('ruleTempSwing').value = cfg.weather_rules.temp_swing_threshold ?? 8.0;
-            document.getElementById('ruleHot').value = cfg.weather_rules.hot_threshold ?? 28.0;
-            document.getElementById('ruleCold').value = cfg.weather_rules.cold_threshold ?? 12.0;
 
             // AI 设置
             document.getElementById('aiEnabled').checked = !!cfg.ai.enabled;
@@ -557,7 +773,9 @@
             const payload = {
                 basic: {
                     partner_name: document.getElementById('partnerName').value.trim(),
-                    city: document.getElementById('targetCity').value.trim(),
+                    country: getSelectedCountry(),
+                    city: getSelectedCity(),
+                    district: getSelectedDistrict(),
                     relationship_start_date: document.getElementById('relationshipStartDate').value.trim()
                 },
                 recipient: {
@@ -572,11 +790,11 @@
                     partner_email: document.getElementById('partnerEmail').value.trim(),
                     cc_email: document.getElementById('ccEmail').value.trim()
                 },
-                weather_rules: {
-                    rain_pop_threshold: parseInt(document.getElementById('ruleRainPop').value) || 30,
-                    temp_swing_threshold: parseFloat(document.getElementById('ruleTempSwing').value) || 8.0,
-                    hot_threshold: parseFloat(document.getElementById('ruleHot').value) || 28.0,
-                    cold_threshold: parseFloat(document.getElementById('ruleCold').value) || 12.0
+                weather_rules: (currentConfig && currentConfig.weather_rules) || {
+                    rain_pop_threshold: 30,
+                    temp_swing_threshold: 8.0,
+                    hot_threshold: 28.0,
+                    cold_threshold: 12.0
                 },
                 ai: {
                     enabled: document.getElementById('aiEnabled').checked,

@@ -30,7 +30,9 @@ class RecipientConfig(BaseModel):
 
 class BasicConfig(BaseModel):
     partner_name: str = Field(default="亲爱的宝贝", description="伴侣称呼/昵称")
-    city: str = Field(default="上海", description="目标城市 (支持中英文，如 上海/Shanghai)")
+    country: str = Field(default="中国", description="国家/地区")
+    city: str = Field(default="上海", description="目标城市")
+    district: str = Field(default="", description="区/县/郊区 (可选)")
     relationship_start_date: str = Field(default="2023-01-01", description="相恋开始日期 (YYYY-MM-DD)")
 
 

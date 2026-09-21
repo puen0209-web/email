@@ -45,15 +45,40 @@ def translate_weather(desc_en: str) -> tuple[str, str]:
     return (desc_en.strip(), "🌤️")
 
 
-async def fetch_weather_data(city: str, rules: Optional[WeatherRulesConfig] = None) -> Dict[str, Any]:
+async def fetch_weather_data(
+    city: str,
+    rules: Optional[WeatherRulesConfig] = None,
+    district: str = "",
+    country: str = ""
+) -> Dict[str, Any]:
     """
-    异步获取指定城市的天气数据（使用免费开放的 wttr.in JSON API）。
-    若网络异常或请求超时，自动降级返回备用模拟数据，确保主业务平稳。
+    异步获取指定城市/区县的天气数据（使用免费开放的 wttr.in JSON API）。
+    支持传入国家、城市、区县/郊区进行精细化天气定位。
     """
     if not rules:
         rules = WeatherRulesConfig()
 
-    url = f"https://wttr.in/{city.strip()}?format=j1"
+    clean_city = city.strip()
+    clean_district = district.strip()
+    clean_country = country.strip()
+
+    # 构造查询词：优先使用 "区县,城市" 提高精细度
+    if clean_district:
+        query_location = f"{clean_district},{clean_city}"
+    else:
+        query_location = clean_city
+
+    # 构造人性化展示名
+    parts = []
+    if clean_country and clean_country not in ["中国", "China"]:
+        parts.append(clean_country)
+    if clean_city:
+        parts.append(clean_city)
+    if clean_district:
+        parts.append(clean_district)
+    display_name = " · ".join(parts) if parts else (clean_city or "本地")
+
+    url = f"https://wttr.in/{query_location}?format=j1"
     headers = {"User-Agent": "curl/7.68.0", "Accept": "application/json"}
 
     try:
@@ -61,14 +86,14 @@ async def fetch_weather_data(city: str, rules: Optional[WeatherRulesConfig] = No
             resp = await client.get(url, headers=headers)
             if resp.status_code == 200:
                 data = resp.json()
-                return parse_wttr_response(city, data, rules)
+                return parse_wttr_response(display_name, data, rules)
             else:
-                logger.warning(f"wttr.in 返回非 200 状态码: {resp.status_code}")
+                logger.warning(f"wttr.in 返回非 200 状态码: {resp.status_code} (查询: {query_location})")
     except Exception as e:
-        logger.warning(f"获取天气数据失败 ({city}): {e}，启用备用数据")
+        logger.warning(f"获取天气数据失败 ({query_location}): {e}，启用备用数据")
 
     # 异常降级备用数据
-    return get_fallback_weather(city, rules)
+    return get_fallback_weather(display_name, rules)
 
 
 def parse_wttr_response(city: str, data: Dict[str, Any], rules: WeatherRulesConfig) -> Dict[str, Any]:

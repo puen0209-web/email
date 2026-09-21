@@ -126,7 +126,12 @@ async def test_send_email(payload: Optional[TestSendPayload] = None):
 async def preview_email_html():
     """根据最新配置与实时天气，动态渲染 HTML 邮件视图供预览"""
     config = load_config()
-    weather_data = await fetch_weather_data(config.basic.city, config.weather_rules)
+    weather_data = await fetch_weather_data(
+        city=config.basic.city,
+        rules=config.weather_rules,
+        district=getattr(config.basic, "district", ""),
+        country=getattr(config.basic, "country", "")
+    )
     days_together = calculate_days_together(config.basic.relationship_start_date)
     anniversaries = get_sorted_anniversaries(config.anniversaries)
 
