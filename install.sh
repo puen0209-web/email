@@ -195,6 +195,10 @@ if command -v firewall-cmd >/dev/null 2>&1; then
     fi
 fi
 
+if command -v iptables >/dev/null 2>&1; then
+    iptables -I INPUT -p tcp --dport ${PORT} -j ACCEPT 2>/dev/null || true
+fi
+
 # 8. 检查运行状态与公网 IP
 sleep 2
 IS_ACTIVE=$(systemctl is-active ${SERVICE_NAME} || true)
@@ -213,9 +217,14 @@ echo -e "🔐 默认管理访问口令:    ${YELLOW}admin888${NC}"
 echo -e "📂 项目代码安装路径:    ${BLUE}${INSTALL_DIR}${NC}"
 echo -e "💾 配置文件存放路径:    ${BLUE}${INSTALL_DIR}/data/config.json${NC}"
 echo -e "------------------------------------------------------------------"
+echo -e "${YELLOW}⚠️ 重要提示 (针对 GCP / 阿里云 / 腾讯云 / AWS 等云服务器)：${NC}"
+echo -e "  云服务商默认带有外层【安全组 / VPC 防火墙】阻断入站流量！"
+echo -e "  如果浏览器无法打开，请前往云控制台【防火墙规则 / 安全组】添加入站规则："
+echo -e "  协议: TCP, 端口: ${PORT}, 来源: 0.0.0.0/0"
+echo -e "------------------------------------------------------------------"
 echo -e "常用运维指令："
+echo -e "  本地测试连通:   ${CYAN}curl -I http://127.0.0.1:${PORT}/${NC}"
 echo -e "  查看实时日志:   ${CYAN}journalctl -u ${SERVICE_NAME} -f${NC}"
 echo -e "  查看运行状态:   ${CYAN}systemctl status ${SERVICE_NAME}${NC}"
 echo -e "  重启服务进程:   ${CYAN}systemctl restart ${SERVICE_NAME}${NC}"
-echo -e "  停止服务进程:   ${CYAN}systemctl stop ${SERVICE_NAME}${NC}"
 echo -e "==================================================================\n"
